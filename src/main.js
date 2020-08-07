@@ -1,5 +1,5 @@
 import '../styles/main.scss';
-import {getCanvas, getContext, getVertexData, resizeCanvas} from './helpers';
+import {getCanvas, getColorData, getContext, getVertexData, resizeCanvas} from './helpers';
 
 function render() {
     resizeCanvas();
@@ -15,21 +15,26 @@ function render() {
     const squareToGutterRatio = 0.2;
 
     const [vertices, numberOfRows] = getVertexData(canvas, numberOfColumns, squareToGutterRatio);
+    const numberOfElements = numberOfRows * numberOfColumns;
+    const colors = getColorData(numberOfElements);
 
     columnsValueElement.textContent = String(numberOfColumns);
     rowsValueElement.textContent = String(numberOfRows);
-    totalValueElement.textContent = String(numberOfRows * numberOfColumns);
+    totalValueElement.textContent = String(numberOfElements);
 
     // Vertex shader
     const vertexSource = `
         attribute vec2 coordinates;
+        attribute vec3 color;
         uniform vec4 translation;
         uniform mat4 transform;
+        varying vec3 vertexColor;
         void main(void) { 
             // Convert from the application's coordinate system (from top left to bottom right)
             // to the GL one.
             vec2 toGlSpace = vec2(coordinates[0], 1.0 - coordinates[1]) * 2.0 - 1.0;
             gl_Position = (vec4(toGlSpace , 0.0, 1.0) + translation) * transform;
+            vertexColor = color;
         }
     `;
     const vertShader = gl.createShader(gl.VERTEX_SHADER);
@@ -39,8 +44,9 @@ function render() {
     //Fragment shader
     const fragmentSource = `
         precision mediump float;
+        varying vec3 vertexColor;
         void main(void) {
-            gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
+            gl_FragColor = vec4(vertexColor, 1.0);
         }`;
     const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fragShader, fragmentSource);
@@ -58,6 +64,13 @@ function render() {
     const coordinatesLocation = gl.getAttribLocation(shaderProgram, 'coordinates');
     gl.vertexAttribPointer(coordinatesLocation, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinatesLocation);
+
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+    const colorLocation = gl.getAttribLocation(shaderProgram, 'color');
+    gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(colorLocation);
 
     const translate = [0.0, 0.0, 0.0, 0.0];
     const translateLocation = gl.getUniformLocation(shaderProgram, 'translation');
