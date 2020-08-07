@@ -1,7 +1,7 @@
 import '../styles/main.scss';
 import {getCanvas, getColorData, getContext, getVertexData, resizeCanvas} from './helpers';
 
-function render() {
+function app() {
     resizeCanvas();
     const canvas = getCanvas();
     const gl = getContext(canvas);
@@ -10,11 +10,12 @@ function render() {
     const totalValueElement = document.querySelector('.elements .value');
     const fpsValueElement = document.querySelector('.fps .value');
 
-    const numberOfColumns = 100;
+    const numberOfColumns = 300;
     // The space between the squares to the square size ratio.
     const squareToGutterRatio = 0.2;
 
     const [vertices, numberOfRows] = getVertexData(canvas, numberOfColumns, squareToGutterRatio);
+
     const numberOfElements = numberOfRows * numberOfColumns;
     const colors = getColorData(numberOfElements);
 
@@ -116,4 +117,4 @@ function render() {
 }
 
 window.onresize = resizeCanvas;
-window.onload = render;
+window.onload = app;

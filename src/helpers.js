@@ -64,7 +64,7 @@ export function getVertexData(canvas, numberOfColumns, squareToGutterRatio) {
             const topLeftX = columnIndex * squareWithGutterWidth;
             const topLeftY = rowIndex * squareWithGutterHeight;
             const rect = getRectVertices(topLeftX, topLeftY, rectWidth, rectHeight);
-            vertices = vertices.concat(rect);
+            vertices.push(...rect);
         }
     }
 
@@ -79,7 +79,7 @@ export function getColorData(numberOfRectangles) {
         // 6 vertices per rectangle, 3 color values per vertex.
         const rectColors = Array(6);
         rectColors.fill(randomColor)
-        colors = colors.concat(rectColors.flat());
+        colors.push(...rectColors.flat());
     }
 
     return colors;
