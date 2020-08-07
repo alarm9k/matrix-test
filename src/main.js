@@ -26,6 +26,8 @@ function render() {
         uniform vec4 translation;
         uniform mat4 transform;
         void main(void) { 
+            // Convert from the application's coordinate system (from top left to bottom right)
+            // to the GL one.
             vec2 toGlSpace = vec2(coordinates[0], 1.0 - coordinates[1]) * 2.0 - 1.0;
             gl_Position = (vec4(toGlSpace , 0.0, 1.0) + translation) * transform;
         }
