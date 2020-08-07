@@ -8,6 +8,10 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /\.worker\.js$/,
+                use: { loader: 'worker-loader' },
+            },
+            {
                 test: /\.scss$/,
                 use: [{
                     loader: 'style-loader'
