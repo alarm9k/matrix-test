@@ -10,7 +10,7 @@ function app() {
     const totalValueElement = document.querySelector('.elements .value');
     const fpsValueElement = document.querySelector('.fps .value');
 
-    const numberOfColumns = 300;
+    const numberOfColumns = 1000;
     // The space between the squares to the square size ratio.
     const squareToGutterRatio = 0.2;
 
@@ -95,9 +95,15 @@ function app() {
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         const count = Date.now() / 1000;
+
+        // Translating.
         translate[0] = Math.sin(count) / 20;
         translate[1] = Math.cos(count) / 20;
         gl.uniform4fv(translateLocation, translate);
+
+        // Zooming in and out
+        transform[0] = transform[5] = transform[10] = Math.sin(count/2) + 1.9;
+        gl.uniformMatrix4fv(transformLocation, false, transform);
 
         gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
 
