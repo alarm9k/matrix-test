@@ -1,84 +1,27 @@
 import '../styles/main.scss';
-
-function getCanvas() {
-    const canvas = document.querySelector('.viewport');
-    if (canvas) {
-        return canvas;
-    }
-}
-
-function getContext(canvas) {
-    if(canvas) {
-        return canvas.getContext('webgl');
-    }
-}
-
-function resizeCanvas() {
-    const canvas = getCanvas();
-    if(canvas) {
-        const clientWidth = canvas.clientWidth;
-        const clientHeight = canvas.clientHeight;
-
-        if(clientWidth !== canvas.width) {
-            canvas.width = clientWidth;
-        }
-
-        if(clientHeight !== canvas.height) {
-            canvas.height = clientHeight;
-        }
-
-        const gl = getContext(canvas);
-        gl.viewport(0, 0, clientWidth, clientHeight);
-    }
-}
-
-function getSquareVertices(topLeftX, topLeftY, size) {
-    return [
-        // First triangle
-        [topLeftX, topLeftY],
-        [topLeftX, topLeftY + size],
-        [topLeftX + size, topLeftY + size],
-
-        // Second triangle
-        [topLeftX, topLeftY],
-        [topLeftX + size, topLeftY],
-        [topLeftX + size, topLeftY + size]
-    ].flat();
-}
-
-function getVertexData(canvas, numberOfColumns, squareToGutterRatio) {
-    const numberOfRows = Math.floor(canvas.height / canvas.width * numberOfColumns);
-    // We consider the viewport coordinates to be from 0 to 1, going from top left to bottom right.
-    const squareSize = 1 / (numberOfColumns + squareToGutterRatio * (numberOfColumns - 1));
-    const gutterSize = squareSize * squareToGutterRatio;
-    const squareWithGutter = squareSize + gutterSize;
-    let vertices = [];
-
-    for(let rowIndex = 0; rowIndex < numberOfRows; rowIndex++) {
-        for(let columnIndex = 0; columnIndex < numberOfColumns; columnIndex++) {
-            const topLeftX = columnIndex * squareWithGutter;
-            const topLeftY = rowIndex * squareWithGutter;
-            const square = getSquareVertices(topLeftX, topLeftY, squareSize);
-            vertices = vertices.concat(square);
-        }
-    }
-
-    return vertices;
-}
+import {getCanvas, getContext, getVertexData, resizeCanvas} from './helpers';
 
 function render() {
     resizeCanvas();
     const canvas = getCanvas();
     const gl = getContext(canvas);
+    const columnsValueElement = document.querySelector('.columns .value');
+    const rowsValueElement = document.querySelector('.rows .value');
+    const totalValueElement = document.querySelector('.elements .value');
+    const fpsValueElement = document.querySelector('.fps .value');
 
     const numberOfColumns = 100;
     // The space between the squares to the square size ratio.
     const squareToGutterRatio = 0.2;
 
-    const vertices = getVertexData(canvas, numberOfColumns, squareToGutterRatio);
+    const [vertices, numberOfRows] = getVertexData(canvas, numberOfColumns, squareToGutterRatio);
+
+    columnsValueElement.textContent = String(numberOfColumns);
+    rowsValueElement.textContent = String(numberOfRows);
+    totalValueElement.textContent = String(numberOfRows * numberOfColumns);
 
     // Vertex shader
-    const vertCode = `
+    const vertexSource = `
         attribute vec2 coordinates;
         uniform vec4 translation;
         uniform mat4 transform;
@@ -88,17 +31,17 @@ function render() {
         }
     `;
     const vertShader = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(vertShader, vertCode);
+    gl.shaderSource(vertShader, vertexSource);
     gl.compileShader(vertShader);
 
     //Fragment shader
-    const fragCode = `
+    const fragmentSource = `
         precision mediump float;
         void main(void) {
             gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
         }`;
     const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(fragShader, fragCode);
+    gl.shaderSource(fragShader, fragmentSource);
     gl.compileShader(fragShader);
 
     const shaderProgram = gl.createProgram();
@@ -127,22 +70,34 @@ function render() {
     const transformLocation = gl.getUniformLocation(shaderProgram, 'transform');
     gl.uniformMatrix4fv(transformLocation, false, transform);
 
+    let renderCounter = 0;
+    let lastTime = Date.now();
+
     function render() {
-        /* Step5: Drawing the required object (triangle) */
-        // Clear the canvas
         gl.clearColor(1.0, 1.0, 1.0, 1.0);
-
-        // Enable the depth test
         gl.enable(gl.DEPTH_TEST);
-
-        // Clear the color buffer bit
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        // Draw the triangle
+        const count = Date.now() / 1000;
+        translate[0] = Math.sin(count) / 20;
+        translate[1] = Math.cos(count) / 20;
+        gl.uniform4fv(translateLocation, translate);
+
         gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
+
+        renderCounter++;
+        const now = Date.now();
+        const diff = now - lastTime
+        if(diff > 1000) {
+            lastTime = now;
+            fpsValueElement.textContent = String(Math.round(renderCounter / (diff / 1000)));
+            renderCounter = 0;
+        }
+
+        requestAnimationFrame(render);
     }
 
-    render();
+    requestAnimationFrame(render);
 }
 
 window.onresize = resizeCanvas;

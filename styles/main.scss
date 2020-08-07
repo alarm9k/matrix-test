@@ -9,3 +9,24 @@ body {
   height: 100vh;
   display: block;
 }
+
+.info {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: white;
+  padding: 1em;
+}
+
+.info-entry {
+  display: flex;
+  margin-bottom: 1em;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .label {
+    width: 10em;
+  }
+}
