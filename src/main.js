@@ -12,6 +12,9 @@ function app() {
     const rowsValueElement = document.querySelector('.rows .value');
     const totalValueElement = document.querySelector('.elements .value');
     const fpsValueElement = document.querySelector('.fps .value');
+    const scaleValueElement = document.querySelector('.scale .value');
+    const translateXValueElement = document.querySelector('.translate-x .value');
+    const translateYValueElement = document.querySelector('.translate-y .value');
 
     // Set the number of columns here. The square size will be calculated to fit this number
     // of columns into the viewport. The number of rows will be calculated depending on the
@@ -128,9 +131,12 @@ function app() {
             translate[0] = Math.sin(count) / 20;
             translate[1] = Math.cos(count) / 20;
             gl.uniform4fv(translateLocation, translate);
+            translateXValueElement.textContent = String(translate[0].toFixed(2));
+            translateYValueElement.textContent = String(translate[1].toFixed(2));
 
             // Zooming in and out
             transform[0] = transform[5] = transform[10] = 0.9 + (Math.sin(count/2) + 1) * 5;
+            scaleValueElement.textContent = String(transform[0].toFixed(2));
             gl.uniformMatrix4fv(transformLocation, false, transform);
 
             gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
