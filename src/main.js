@@ -50,14 +50,13 @@ function app() {
                 const vertexSource = `
                     attribute vec2 coordinates;
                     attribute vec3 color;
-                    uniform vec4 translation;
                     uniform mat4 transform;
                     varying vec3 vertexColor;
                     void main(void) {
                         // Convert from the application's coordinate system (from top left to bottom right)
                         // to the GL one.
                         vec2 toGlSpace = vec2(coordinates[0], 1.0 - coordinates[1]) * 2.0 - 1.0;
-                        gl_Position = (vec4(toGlSpace , 0.0, 1.0) + translation) * transform;
+                        gl_Position = vec4(toGlSpace , 0.0, 1.0) * transform;
                         vertexColor = color;
                     }`;
                 const vertShader = gl.createShader(gl.VERTEX_SHADER);
@@ -95,10 +94,6 @@ function app() {
                 gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
                 gl.enableVertexAttribArray(colorLocation);
 
-                const translate = [0.0, 0.0, 0.0, 0.0];
-                const translateLocation = gl.getUniformLocation(shaderProgram, 'translation');
-                gl.uniform4fv(translateLocation, translate);
-
                 const transform = [
                     [1.0, 0.0, 0.0, 0.0],
                     [0.0, 1.0, 0.0, 0.0],
@@ -119,17 +114,16 @@ function app() {
                     const count = Date.now() / 1000;
 
                     // Translating.
-                    translate[0] = Math.sin(count) / 20;
-                    translate[1] = Math.cos(count) / 20;
-                    gl.uniform4fv(translateLocation, translate);
-                    updateInfo({
-                        translateX: String(translate[0].toFixed(2)),
-                        translateY: String(translate[1].toFixed(2))
-                    });
-
+                    transform[3] = Math.sin(count) / 5;
+                    transform[7] = Math.cos(count) / 5;
                     // Zooming in and out
-                    transform[0] = transform[5] = transform[10] = 0.9 + (Math.sin(count / 2) + 1) * 5;
-                    updateInfo({scale: String(transform[0].toFixed(2))});
+                    transform[0] = transform[5] = 0.9 + (Math.sin(count / 2) + 1) * 5;
+
+                    updateInfo({
+                        translateX: String(transform[3].toFixed(2)),
+                        translateY: String(transform[7].toFixed(2)),
+                        scale: String(transform[0].toFixed(2))
+                    });
                     gl.uniformMatrix4fv(transformLocation, false, transform);
 
                     gl.drawArrays(gl.TRIANGLES, 0, numberOfElements * 6);
