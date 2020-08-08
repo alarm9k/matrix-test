@@ -34,11 +34,10 @@ function getVertexData(numberOfColumns, numberOfRows, squareToGutterRatio) {
         }
     }
 
-    return vertices;
+    return new Float32Array(vertices);
 }
 
 onmessage = function(event) {
-    console.log('vertex worker fired');
     const {numberOfColumns, numberOfRows, squareToGutterRatio} = event.data;
     postMessage(getVertexData(numberOfColumns, numberOfRows, squareToGutterRatio));
 }

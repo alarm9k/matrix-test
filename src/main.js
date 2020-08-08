@@ -41,114 +41,116 @@ function app() {
 
     generateData(numberOfColumns, numberOfRows, squareToGutterRatio)
         .then(values => {
-            updateInfo({status: 'Preparing shaders...'});
+            {
+                updateInfo({status: 'Preparing shaders...'});
 
-            const [vertices, colors] = values;
+                const [vertices, colors] = values;
 
-            // Vertex shader
-            const vertexSource = `
-            attribute vec2 coordinates;
-            attribute vec3 color;
-            uniform vec4 translation;
-            uniform mat4 transform;
-            varying vec3 vertexColor;
-            void main(void) {
-                // Convert from the application's coordinate system (from top left to bottom right)
-                // to the GL one.
-                vec2 toGlSpace = vec2(coordinates[0], 1.0 - coordinates[1]) * 2.0 - 1.0;
-                gl_Position = (vec4(toGlSpace , 0.0, 1.0) + translation) * transform;
-                vertexColor = color;
-            }`;
-            const vertShader = gl.createShader(gl.VERTEX_SHADER);
-            gl.shaderSource(vertShader, vertexSource);
-            gl.compileShader(vertShader);
+                // Vertex shader
+                const vertexSource = `
+                    attribute vec2 coordinates;
+                    attribute vec3 color;
+                    uniform vec4 translation;
+                    uniform mat4 transform;
+                    varying vec3 vertexColor;
+                    void main(void) {
+                        // Convert from the application's coordinate system (from top left to bottom right)
+                        // to the GL one.
+                        vec2 toGlSpace = vec2(coordinates[0], 1.0 - coordinates[1]) * 2.0 - 1.0;
+                        gl_Position = (vec4(toGlSpace , 0.0, 1.0) + translation) * transform;
+                        vertexColor = color;
+                    }`;
+                const vertShader = gl.createShader(gl.VERTEX_SHADER);
+                gl.shaderSource(vertShader, vertexSource);
+                gl.compileShader(vertShader);
 
-            //Fragment shader
-            const fragmentSource = `
-            precision mediump float;
-            varying vec3 vertexColor;
-            void main(void) {
-                gl_FragColor = vec4(vertexColor, 1.0);
-            }`;
-            const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
-            gl.shaderSource(fragShader, fragmentSource);
-            gl.compileShader(fragShader);
+                //Fragment shader
+                const fragmentSource = `
+                    precision mediump float;
+                    varying vec3 vertexColor;
+                    void main(void) {
+                        gl_FragColor = vec4(vertexColor, 1.0);
+                    }`;
+                const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+                gl.shaderSource(fragShader, fragmentSource);
+                gl.compileShader(fragShader);
 
-            const shaderProgram = gl.createProgram();
-            gl.attachShader(shaderProgram, vertShader);
-            gl.attachShader(shaderProgram, fragShader);
-            gl.linkProgram(shaderProgram);
-            gl.useProgram(shaderProgram);
+                const shaderProgram = gl.createProgram();
+                gl.attachShader(shaderProgram, vertShader);
+                gl.attachShader(shaderProgram, fragShader);
+                gl.linkProgram(shaderProgram);
+                gl.useProgram(shaderProgram);
 
-            const vertexBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-            const coordinatesLocation = gl.getAttribLocation(shaderProgram, 'coordinates');
-            gl.vertexAttribPointer(coordinatesLocation, 2, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(coordinatesLocation);
+                const vertexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+                const coordinatesLocation = gl.getAttribLocation(shaderProgram, 'coordinates');
+                gl.vertexAttribPointer(coordinatesLocation, 2, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(coordinatesLocation);
 
-            const colorBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-            const colorLocation = gl.getAttribLocation(shaderProgram, 'color');
-            gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(colorLocation);
+                const colorBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+                const colorLocation = gl.getAttribLocation(shaderProgram, 'color');
+                gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(colorLocation);
 
-            const translate = [0.0, 0.0, 0.0, 0.0];
-            const translateLocation = gl.getUniformLocation(shaderProgram, 'translation');
-            gl.uniform4fv(translateLocation, translate);
-
-            const transform = [
-                [1.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0]
-            ].flat();
-            const transformLocation = gl.getUniformLocation(shaderProgram, 'transform');
-            gl.uniformMatrix4fv(transformLocation, false, transform);
-
-            let renderCount = 0;
-            let lastTime = Date.now();
-
-            function render() {
-                gl.clearColor(1.0, 1.0, 1.0, 1.0);
-                gl.enable(gl.DEPTH_TEST);
-                gl.clear(gl.COLOR_BUFFER_BIT);
-
-                const count = Date.now() / 1000;
-
-                // Translating.
-                translate[0] = Math.sin(count) / 20;
-                translate[1] = Math.cos(count) / 20;
+                const translate = [0.0, 0.0, 0.0, 0.0];
+                const translateLocation = gl.getUniformLocation(shaderProgram, 'translation');
                 gl.uniform4fv(translateLocation, translate);
-                updateInfo({
-                    translateX: String(translate[0].toFixed(2)),
-                    translateY: String(translate[1].toFixed(2))
-                });
 
-                // Zooming in and out
-                transform[0] = transform[5] = transform[10] = 0.9 + (Math.sin(count / 2) + 1) * 5;
-                updateInfo({scale: String(transform[0].toFixed(2))});
+                const transform = [
+                    [1.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0]
+                ].flat();
+                const transformLocation = gl.getUniformLocation(shaderProgram, 'transform');
                 gl.uniformMatrix4fv(transformLocation, false, transform);
 
-                gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
+                let renderCount = 0;
+                let lastTime = Date.now();
 
-                // Calculate FPS.
-                renderCount++;
-                const now = Date.now();
-                const diff = now - lastTime;
-                if (diff > 1000) {
-                    lastTime = now;
-                    updateInfo({fps: String(Math.round(renderCount / (diff / 1000)))});
-                    renderCount = 0;
+                function render() {
+                    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+                    gl.enable(gl.DEPTH_TEST);
+                    gl.clear(gl.COLOR_BUFFER_BIT);
+
+                    const count = Date.now() / 1000;
+
+                    // Translating.
+                    translate[0] = Math.sin(count) / 20;
+                    translate[1] = Math.cos(count) / 20;
+                    gl.uniform4fv(translateLocation, translate);
+                    updateInfo({
+                        translateX: String(translate[0].toFixed(2)),
+                        translateY: String(translate[1].toFixed(2))
+                    });
+
+                    // Zooming in and out
+                    transform[0] = transform[5] = transform[10] = 0.9 + (Math.sin(count / 2) + 1) * 5;
+                    updateInfo({scale: String(transform[0].toFixed(2))});
+                    gl.uniformMatrix4fv(transformLocation, false, transform);
+
+                    gl.drawArrays(gl.TRIANGLES, 0, numberOfElements * 6);
+
+                    // Calculate FPS.
+                    renderCount++;
+                    const now = Date.now();
+                    const diff = now - lastTime;
+                    if (diff > 1000) {
+                        lastTime = now;
+                        updateInfo({fps: String(Math.round(renderCount / (diff / 1000)))});
+                        renderCount = 0;
+                    }
+
+                    requestAnimationFrame(render);
                 }
+
+                updateInfo({status: 'Rendering'});
 
                 requestAnimationFrame(render);
             }
-
-            updateInfo({status: 'Rendering'});
-
-            requestAnimationFrame(render);
         });
 
 }

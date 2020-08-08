@@ -9,11 +9,10 @@ function getColorData(numberOfRectangles) {
         colors.push(...rectColors.flat());
     }
 
-    return colors;
+    return new Float32Array(colors);
 }
 
 onmessage = function(event) {
-    console.log('color worker fired');
     const numberOfRectangles = event.data;
     postMessage(getColorData(numberOfRectangles));
 }
