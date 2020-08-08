@@ -94,6 +94,10 @@ function app() {
                 gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
                 gl.enableVertexAttribArray(colorLocation);
 
+                gl.clearColor(1.0, 1.0, 1.0, 1.0);
+                gl.enable(gl.DEPTH_TEST);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+
                 const transform = [
                     [1.0, 0.0, 0.0, 0.0],
                     [0.0, 1.0, 0.0, 0.0],
@@ -107,10 +111,6 @@ function app() {
                 let lastTime = Date.now();
 
                 function render() {
-                    gl.clearColor(1.0, 1.0, 1.0, 1.0);
-                    gl.enable(gl.DEPTH_TEST);
-                    gl.clear(gl.COLOR_BUFFER_BIT);
-
                     const count = Date.now() / 1000;
 
                     // Translating.
